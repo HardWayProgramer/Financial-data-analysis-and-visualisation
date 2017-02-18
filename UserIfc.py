@@ -12,7 +12,7 @@ class Window(QtGui.QMainWindow):
     btn = QtGui.QPushButton("Exit",self)
     QtCore.QObject.connect(btn,QtCore.SIGNAL('clicked()'),QtCore.QCoreApplication.instance().quit)
     btn.resize(100,50)
-    btn.move(100,100)
+    btn.move(1,1)
     self.show()
 
 def main():
