@@ -25,28 +25,36 @@ class Window(QtGui.QWidget):
     self.setWindowTitle("Notowania gieldowe")
     self.grid = QtGui.QGridLayout()
     self.setLayout(self.grid)
-    #harvest
 #########################################################################################################
     
 ##########################################################################################################
     self.plo = pg.PlotWidget()
     self.grid.addWidget(self.plo)
-    x= set([1,2,3,4,5,6,7,8,9,5])
-    y= set([1,3,4,5,6,7,8,9,10])
-    self.plo.plotItem.plot()
-##########################################################################################################   
-    #srcombo = QtGui,QC
-    
-
+    self.x = [1]
+    self.y = [1]
+    self.plo.plotItem.plot(x,y)
+###########################################init stock selection combo####################################   
+    self.srcombo = QtGui.QComboBox()
+    self.grid.addWidget(self.srcombo,1,9)
+    self.srcombo.addItem("Wig20")
+    self.srcombo.addItem("CAC 40")
+    self.srcombo.addItem("DAX")
+    self.srcombo.addItem("NIKKEI 225")
+    self.srcombo.addItem("FTSE 100")
+############################################init stock selection button###################################   
     self.srcbtn = QtGui.QPushButton("Get Data",self)
     self.grid.addWidget(self.srcbtn,2,9)
-
+#######################################init company selection combo#######################################
+    self.cmpcombo = QtGui.QComboBox()
+    self.grid.addWidget(self.cmpcombo,3,9)
+    self.cmpcombo.addItem("empty")
+########################################init company selection button#####################################
     self.shocom = QtGui.QPushButton("Confirm",self)
     self.grid.addWidget(self.shocom,4,9)
 
     self.harvbox = QtGui.QCheckBox('automatically harvest data',self)
     self.harvbox.stateChanged.connect(self.turnAutoHarvest)
-    self.grid.addWidget(self.harvbox,1,9)
+    self.grid.addWidget(self.harvbox,7,9)
 ##########################################################################################################
     self.show()
 ##############################3
