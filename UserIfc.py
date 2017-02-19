@@ -17,7 +17,9 @@ class Window(QtGui.QWidget):
     else:
         self.harvestFlag = False
         print self.harvestFlag
-
+  def updatePlot():
+    self.x=[1,2,3,4,5,6,7,8,9]
+    self.y=[1,3,5,7,9,2,5,3,1]
   def __init__(self,appref):
     super(Window,self).__init__()
     self.scrRes = appref.desktop().screenGeometry()
@@ -32,7 +34,7 @@ class Window(QtGui.QWidget):
     self.grid.addWidget(self.plo)
     self.x = [1]
     self.y = [1]
-    self.plo.plotItem.plot(x,y)
+    self.plo.plotItem.plot(self.x,self.y)
 ###########################################init stock selection combo####################################   
     self.srcombo = QtGui.QComboBox()
     self.grid.addWidget(self.srcombo,1,9)
@@ -57,7 +59,13 @@ class Window(QtGui.QWidget):
     self.grid.addWidget(self.harvbox,7,9)
 ##########################################################################################################
     self.show()
-##############################3
+    if self.harvestFlag == True:
+	self.autoCollector = Collector(harvestFlag) 
+############################## time.strftime("%Y. %m. %d (%H:%M)")  time format
+class Collector():
+  def __init__(self,flag):
+    axn=1
+
 def main():
   app = QtGui.QApplication(sys.argv)
   GUI = Window(app)
