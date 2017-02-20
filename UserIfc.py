@@ -1,6 +1,7 @@
 import sys
 from PyQt4 import QtGui, QtCore
 import pyqtgraph as pg
+import datetime as dt
 
 class Window(QtGui.QWidget):
   scrRes = None
@@ -17,9 +18,10 @@ class Window(QtGui.QWidget):
     else:
         self.harvestFlag = False
         print self.harvestFlag
-  def updatePlot():
-    self.x=[1,2,3,4,5,6,7,8,9]
+  def updatePlot(self):
+    self.x=[3,2,3,4,5,6,7,8,9]
     self.y=[1,3,5,7,9,2,5,3,1]
+    self.plo.plot(self.x,self.y)
   def __init__(self,appref):
     super(Window,self).__init__()
     self.scrRes = appref.desktop().screenGeometry()
@@ -35,6 +37,7 @@ class Window(QtGui.QWidget):
     self.x = [1]
     self.y = [1]
     self.plo.plotItem.plot(self.x,self.y)
+    self.grid.addWidget(self.plo,0,0)
 ###########################################init stock selection combo####################################   
     self.srcombo = QtGui.QComboBox()
     self.grid.addWidget(self.srcombo,1,9)
@@ -53,7 +56,8 @@ class Window(QtGui.QWidget):
 ########################################init company selection button#####################################
     self.shocom = QtGui.QPushButton("Confirm",self)
     self.grid.addWidget(self.shocom,4,9)
-
+    self.shocom.clicked.connect(self.updatePlot)
+####################################################checkbox init#########################################
     self.harvbox = QtGui.QCheckBox('automatically harvest data',self)
     self.harvbox.stateChanged.connect(self.turnAutoHarvest)
     self.grid.addWidget(self.harvbox,7,9)
