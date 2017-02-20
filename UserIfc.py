@@ -4,25 +4,52 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as fcanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as ntbar
 import matplotlib.dates as mdate
+import time as ct
 import matplotlib.cbook as cbk
 import numpy as np
+import urllib2
 
 class Window(QtGui.QWidget):
-  harvestFlag = False
-  def turnAutoHarvest(self,checked):
-    if checked:
-        self.harvestFlag = True
-	print self.harvestFlag
-    else:
-        self.harvestFlag = False
-        print self.harvestFlag
-  def updatePlot(self):
-    self.x=[3,2,3,4,5,6,7,8,9]
-    self.y=[1,3,5,7,9,2,5,3,1]
+  DJI = ['PFE','V','UTX','KO','TRV','MSFT','INTC','MRK','MMM','AXP','GE','AAPL','CVX','PG','JPM','GS','DD','CSCO','IBM','DIS','CAT','XOM','JNJ','WMT','NKE','MCD','HD','BA','VZ','UNH']
+  FTSE100 = ['EXPN.L','AHT.L','SKY.L','CPG.L','PFG.L','WPG.L','PPB.L','VOD.L','SDR.L','BATS.L','PSN.L','SSE.L','GKN.L']
+  NIKKEI225 = []
+  selectedS = None
+  selectedC = None
+  currency = None
+  def updateSS(self):
+    self.selectedS = self.srcombo.currentText()
+    self.selectStock()    
+
+  def updateSC(self):
+    self.selectedC = self.cmpcombo.currentText()
+    self.selectCompany()
+
+  def selectStock(self):
+    self.cmpcombo.clear()
+    if self.selectedS == 'DJI':
+      for i in self.DJI:
+        self.cmpcombo.addItem(i)
+    elif self.selectedS == 'FTSE100':
+      for i in self.FTSE100:
+        self.cmpcombo.addItem(i)
+    elif self.selectedS == 'NIKKEI255':
+      for i in self.NIKKEI255:
+        self.cmpcombo.addItem(i)
+    print self.selectedS
+
+  def selectCompany(self):
+    stockUrl = str( 'http://chartapi.finance.yahoo.com/instrument/1.0/'+self.selectedC+'/chartdata;type=quote;range=10y/csv')
+    #src = urllib2.urlopen(stockUrl)
+    print stockUrl
+  def getData(self):
+   z=1
+
+
+  def updatePlot(self):  
     ax = self.figure.add_subplot(111)
     ax.hold(False)
-    ax.plot(self.x,self.y)
-
+    ax.ylabel('value'+self.currency)
+    ax.plot()
     self.canvas.draw()
   def __init__(self,appref):
     super(Window,self).__init__()
@@ -45,34 +72,28 @@ class Window(QtGui.QWidget):
 ###########################################init stock selection combo####################################   
     self.srcombo = QtGui.QComboBox()
     self.grid.addWidget(self.srcombo,0,9)
-    self.srcombo.addItem("Wig20")
-    self.srcombo.addItem("CAC 40")
-    self.srcombo.addItem("DAX")
-    self.srcombo.addItem("NIKKEI 225")
-    self.srcombo.addItem("FTSE 100")
+    self.srcombo.addItem("stock select")
+    self.srcombo.addItem("DJI")
+    self.srcombo.addItem("NIKKEI225")
+    self.srcombo.addItem("FTSE100")
+    
 ############################################init stock selection button###################################   
     self.srcbtn = QtGui.QPushButton("Get Data",self)
     self.grid.addWidget(self.srcbtn,1,9)
+    self.srcbtn.clicked.connect(self.updateSS)
 #######################################init company selection combo#######################################
     self.cmpcombo = QtGui.QComboBox()
     self.grid.addWidget(self.cmpcombo,2,9)
-    self.cmpcombo.addItem("empty")
+    self.cmpcombo.addItem("company select")
 ########################################init company selection button#####################################
     self.shocom = QtGui.QPushButton("Confirm",self)
     self.grid.addWidget(self.shocom,3,9)
-    self.shocom.clicked.connect(self.updatePlot)
-####################################################checkbox init#########################################
-    self.harvbox = QtGui.QCheckBox('automatically harvest data',self)
-    self.harvbox.stateChanged.connect(self.turnAutoHarvest)
-    self.grid.addWidget(self.harvbox,9,9)
+    self.shocom.clicked.connect(self.updateSC)
 ##########################################################################################################
     self.show()
-    if self.harvestFlag == True:
-	self.autoCollector = Collector(harvestFlag) 
+
 ############################## time.strftime("%Y. %m. %d (%H:%M)")  time format
-class Collector():
-  def __init__(self,flag):
-    axn=1
+
 
 def main():
   app = QtGui.QApplication(sys.argv)
