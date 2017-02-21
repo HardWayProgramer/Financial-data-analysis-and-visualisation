@@ -8,6 +8,7 @@ import time as ct
 import matplotlib.cbook as cbk
 import numpy as np
 import urllib2
+from threading import Thread
 
 class Window(QtGui.QWidget):
   DJI = ['PFE','V','UTX','KO','TRV','MSFT','INTC','MRK','MMM','AXP','GE','AAPL','CVX','PG','JPM','GS','DD','CSCO','IBM','DIS','CAT','XOM','JNJ','WMT','NKE','MCD','HD','BA','VZ','UNH']
@@ -22,7 +23,7 @@ class Window(QtGui.QWidget):
 
   def updateSC(self):
     self.selectedC = self.cmpcombo.currentText()
-    self.selectCompany()
+    self.getData()
 
   def selectStock(self):
     self.cmpcombo.clear()
@@ -35,15 +36,20 @@ class Window(QtGui.QWidget):
     elif self.selectedS == 'NIKKEI255':
       for i in self.NIKKEI255:
         self.cmpcombo.addItem(i)
-    print self.selectedS
 
-  def selectCompany(self):
+  def scrapTheWebsite(self):
     stockUrl = str( 'http://chartapi.finance.yahoo.com/instrument/1.0/'+self.selectedC+'/chartdata;type=quote;range=10y/csv')
-    #src = urllib2.urlopen(stockUrl)
-    print stockUrl
+    try:
+      src = urllib2.urlopen(stockUrl).read()
+    except:
+      #self.grid.addWidget()
+      print 'cos nie pyklo'
+    print src
+    print 'debug scrap wbs'
+  
   def getData(self):
-   z=1
-
+    nth = Thread(target = self.scrapTheWebsite, args = ())
+    nth.start()
 
   def updatePlot(self):  
     ax = self.figure.add_subplot(111)
