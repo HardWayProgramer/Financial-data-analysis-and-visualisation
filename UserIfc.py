@@ -5,7 +5,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as fcanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as ntbar
 import matplotlib.dates as mdate
 import time as ct
-import matplotlib.cbook as cbk
+#import matplotlib.cbook as cbk
 import numpy as np
 import urllib2
 from threading import Thread
@@ -17,6 +17,14 @@ class Window(QtGui.QWidget):
   selectedS = None
   selectedC = None
   currency = None
+  date = []
+  openp = []
+  maxp = []
+  minp = []
+  closep = []
+  vol = []
+  netErrorFlag = False  
+
   def updateSS(self):
     self.selectedS = self.srcombo.currentText()
     self.selectStock()    
@@ -24,6 +32,15 @@ class Window(QtGui.QWidget):
   def updateSC(self):
     self.selectedC = self.cmpcombo.currentText()
     self.getData()
+
+  def dspNetError(self):
+    errinfo = QtGui.QMessageBox()
+    errinfo.setIcon(QtGui.QMessageBox.Information)
+    errinfo.setText('Failed to obtain data')
+    errinfo.setDetailedText('One or more of the following might have occured:\n-You have no network connection\n-Source servers are down\n-Your firewall or provider is blocking the connection with finance.yahoo.com\n-The site might be redirected / blocked in:\n   /etc/hosts (linux)\n  ..\Windows\System32\drivers\etc\hosts')
+    errinfo.setGeometry((self.scrRes.width()/2 -150),(self.scrRes.height()/2 -100),300, 200)
+    errinfo.setStandardButtons(QtGui.QMessageBox.Ok)
+    errinfo.exec_()
 
   def selectStock(self):
     self.cmpcombo.clear()
@@ -36,26 +53,49 @@ class Window(QtGui.QWidget):
     elif self.selectedS == 'NIKKEI255':
       for i in self.NIKKEI255:
         self.cmpcombo.addItem(i)
+################################################################rage quit function ... ###############
+  #def unfcknPackTheData(self,line):
+    #splt = line.split(',')
+    #date.append(mdate.datestr2num(splt[0]))
 
+######################################################################################################
   def scrapTheWebsite(self):
     stockUrl = str( 'http://chartapi.finance.yahoo.com/instrument/1.0/'+self.selectedC+'/chartdata;type=quote;range=10y/csv')
     try:
-      src = urllib2.urlopen(stockUrl).read()
+      src = urllib2.urlopen(stockUrl).read().decode()
+      split_src = src.split('\n')
+      for line in split_src:
+        split_line = line.split(',')
+        if len(split_line) == 6:
+          if 'values' not in line and 'labels' not in line:
+            self.date.append(mdate.datestr2num(split_line[0]))
+            self.closep.append(float(split_line[1]))
+            self.maxp.append(float(split_line[2]))
+            self.minp.append(float(split_line[3]))
+            self.openp.append(float(split_line[4]))
+            self.vol.append(float(split_line[5]))
+      self.currency = split_src[8]
+      self.currency = self.currency.split(':')
     except:
-      #self.grid.addWidget()
-      print 'cos nie pyklo'
-    print src
-    print 'debug scrap wbs'
+      self.netErrorFlag = True
+      print 'err'
+    else:
+      self.netErrorFlag = False
   
   def getData(self):
     nth = Thread(target = self.scrapTheWebsite, args = ())
-    nth.start()
+    nth.start() 
+    ct.sleep(2)
+    if self.netErrorFlag == True:
+      self.dspNetError()
+    else:
+      self.updatePlot()
 
   def updatePlot(self):  
     ax = self.figure.add_subplot(111)
     ax.hold(False)
-    ax.ylabel('value'+self.currency)
-    ax.plot()
+    #ax.ylabel('value in:'+self.currency[1])
+    ax.plot(self.date,self.maxp,'.k')
     self.canvas.draw()
   def __init__(self,appref):
     super(Window,self).__init__()
@@ -97,7 +137,6 @@ class Window(QtGui.QWidget):
     self.shocom.clicked.connect(self.updateSC)
 ##########################################################################################################
     self.show()
-
 ############################## time.strftime("%Y. %m. %d (%H:%M)")  time format
 
 
@@ -112,5 +151,5 @@ def main():
 
 
 
-
-main()
+if __name__ == '__main__':
+  main()
