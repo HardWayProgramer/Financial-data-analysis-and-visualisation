@@ -53,12 +53,7 @@ class Window(QtGui.QWidget):
     elif self.selectedS == 'NIKKEI255':
       for i in self.NIKKEI255:
         self.cmpcombo.addItem(i)
-################################################################rage quit function ... ###############
-  #def unfcknPackTheData(self,line):
-    #splt = line.split(',')
-    #date.append(mdate.datestr2num(splt[0]))
 
-######################################################################################################
   def scrapTheWebsite(self):
     stockUrl = str( 'http://chartapi.finance.yahoo.com/instrument/1.0/'+self.selectedC+'/chartdata;type=quote;range=10y/csv')
     try:
