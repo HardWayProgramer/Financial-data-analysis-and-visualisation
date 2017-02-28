@@ -6,6 +6,7 @@ Files :
 			plotX
 			plotY
 			plotRGB
+			currency
 			dateX
 			openX
 			maxX
@@ -15,7 +16,7 @@ Files :
 
 		-Methods:
 			main() void
-			initWindow() void
+			__init__()
 			dspNetError() void
 			updatePlot() void
 			splitToPlot([]) void 			#writes columns from csv to arrays 
@@ -34,7 +35,7 @@ Files :
 			-getCurrency(Currency) returns []       #updates ... then returns local data
 			-setCompany(Stock,Company) returns bool #updates company data in local file (if different)
 			-setCurrency(currency)	--||-- 		#updates the currency data ...
-
+			-getCurrency(Stock,Company)		#gets the currency in which values of company are displayed
 	-DBDJI.csv
 		Stock prices of DJI
 	-DBNIKKEI.csv
