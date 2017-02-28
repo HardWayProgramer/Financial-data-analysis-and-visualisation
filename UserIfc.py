@@ -1,4 +1,5 @@
 import sys
+import Collector
 from PyQt4 import QtGui, QtCore
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as fcanvas
@@ -139,11 +140,6 @@ def main():
   app = QtGui.QApplication(sys.argv)
   GUI = Window(app)
   sys.exit(app.exec_())
-
-
-
-
-
 
 
 if __name__ == '__main__':
