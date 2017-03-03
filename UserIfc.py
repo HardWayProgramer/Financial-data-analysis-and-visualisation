@@ -1,5 +1,5 @@
 import sys
-import Collector
+import Digging
 from PyQt4 import QtGui, QtCore
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as fcanvas
@@ -22,7 +22,7 @@ class Window(QtGui.QTabWidget):
   closeX = []
   volX = []
 
-    def dspNetError(self):
+  def dspNetError(self):
     errinfo = QtGui.QMessageBox()
     errinfo.setIcon(QtGui.QMessageBox.Information)
     errinfo.setText('Failed to obtain data')
@@ -32,24 +32,36 @@ class Window(QtGui.QTabWidget):
     errinfo.exec_()
 
 
-  def __init__():
-    pass
-
+  def __init__(self,appref):
+    super(Window,self).__init__()
+    self.scrRes = appref.desktop().screenGeometry()
+    self.setGeometry(1,25,self.scrRes.width(),self.scrRes.height()-53)
+    self.setWindowTitle("Stock Prices")
+    self.tabs = QtGui.QTabWidget()
+    self.tab1,self.tab2 = QtGui.QWidget(), QtGui.QWidget()
+    self.tabs.addTab(self.tab1,'companies')
+    self.tabs.addTab(self.tab2,'currencies')
+    self.layout1 = QtGui.QGridLayout()
+    self.layout2 = QtGui.QGridLayout()
+    self.tab1.setLayout(self.layout1)
+    self.tab2.setLayout(self.layout2)
     
-  def updatePlot():
-    ax = self.figure.add_subplot(111)
-    ax.plot(self.plotX,self.plotY)
-    self.canvas.draw()
+    self.tabs.show()
 
-  def splitToPlot([]):
-    pass
+#  def updatePlot():
+#    ax = self.figure.add_subplot(111)
+#    ax.plot(self.plotX,self.plotY)
+#    self.canvas.draw()
+
+#  def splitToPlot([]):
+
 
 
 
 
 
 def main():
-  app = QtGui.QApplication([])
+  app = QtGui.QApplication(sys.argv)
   GUI = Window(app)
   sys.exit(app.exec_())
 
