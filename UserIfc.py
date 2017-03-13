@@ -6,10 +6,11 @@ from PyQt4 import QtGui, QtCore
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as fcanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as ntbar
-import matplotlib.dates as mdate
+import matplotlib.dates as mdates
 import time as ct
 import numpy as np
 import urllib2
+import datetime
 
 
 class Window(QtGui.QTabWidget):
@@ -23,6 +24,9 @@ class Window(QtGui.QTabWidget):
   minX = []
   closeX = []
   volX = []
+  dateXt2 = []
+  valXt2 = []
+  
 
   def dspNetError(self):
     errinfo = QtGui.QMessageBox()
@@ -32,6 +36,32 @@ class Window(QtGui.QTabWidget):
     errinfo.setGeometry((self.scrRes.width()/2 -150),(self.scrRes.height()/2 -100),300, 200)
     errinfo.setStandardButtons(QtGui.QMessageBox.Ok)
     errinfo.exec_()
+
+  def updateTab1Variables(self,table):
+    recData = self.kopacz.fromDatabase(table)
+    self.dateX = []
+    self.openX = []
+    self.closeX = []
+    self.minX = []
+    self.maxX = []
+    self.volX = []
+    for line in recData:
+      self.dateX.append(mdates.datestr2num(str(line[0])))
+      self.openX.append(line[1])
+      self.maxX.append(line[2])
+      self.minX.append(line[3])
+      self.closeX.append(line[4])
+      self.volX.append(line[5])
+    self.updatePlot()
+
+  def updateTab2Variables(self,table):
+    self.dateXt2 = []
+    self.valXt2 = []
+    recData = self.kopacz.fromDatabase(table)
+    for line in recData:
+      self.dateXt2.append(mdates.datestr2num(str(line[0])))
+      self.valXt2.append(mdates.datestr2num(line[1]))
+
   @QtCore.pyqtSlot(str)
   def on_indexCombo_currentIndexChanged(self,index):
     companyItems = self.stockItems[str(index)]
@@ -42,14 +72,21 @@ class Window(QtGui.QTabWidget):
       self.indexCombo.removeItem(0)
       self.companyCombo.currentIndexChanged[str].connect(self.on_companyCombo_currentIndexChanged)
       self.layout1.addWidget(self.companyCombo,1,10,1,2)
-  @QtCore.pyqtSlot(str)
+      self.layout1.addWidget(self.maxChBox,2,10,1,2)
+      self.layout1.addWidget(self.closeChBox,3,10,1,2)
+      self.layout1.addWidget(self.openChBox,4,10,1,2)
+      self.layout1.addWidget(self.minChBox,5,10,1,2)
+
+
+  @QtCore.pyqtSlot(str,)
   def on_companyCombo_currentIndexChanged(self,index):
     if self.companyCombo.itemText(0) == 'Select Company':
       self.companyCombo.removeItem(0)
-    Digger.scrapYahoo(str(index))
+    self.updateTab1Variables(self.companyCombo.currentText())
 
   def __init__(self,appref):
     super(Window,self).__init__()
+    self.kopacz = Digger()
     self.scrRes = appref.desktop().screenGeometry()
     self.setGeometry(1,25,self.scrRes.width(),self.scrRes.height()-53)
     self.setWindowTitle("Stock Prices")
@@ -67,8 +104,15 @@ class Window(QtGui.QTabWidget):
     self.indexCombo.addItems(self.stockItems.keys())
     self.indexCombo.currentIndexChanged[str].connect(self.on_indexCombo_currentIndexChanged)
     self.companyCombo = QtGui.QComboBox(self)
-    print self.scrRes.height()
+    self.openChBox = QtGui.QCheckBox('open price',self)
+    self.closeChBox = QtGui.QCheckBox('close price',self)
+    self.maxChBox = QtGui.QCheckBox('max price',self)
+    self.minChBox = QtGui.QCheckBox('min price',self)
     self.createPlot()
+    self.openChBox.stateChanged.connect(self.updatePlot)
+    self.closeChBox.stateChanged.connect(self.updatePlot)
+    self.maxChBox.stateChanged.connect(self.updatePlot)
+    self.minChBox.stateChanged.connect(self.updatePlot) 
     self.pinToLayouts()
     self.tabs.show()
 
@@ -81,18 +125,25 @@ class Window(QtGui.QTabWidget):
     self.layout2.addWidget(self.toolbar2,11,0,1,10)
 
 
-  def updatePlot(self,pType,tabId):
-    if tabId == 1:
-      self.wykres1.cla()
-      self.wykres2.cla()
-      self.wykres1.plot(self.plotX,self.plotY,'.k')
-      self.wykres2.plot(self.plotY,self.plotX,'{}'.format(pType))
+  def updatePlot(self):
+    if self.tabs.currentIndex() == 0:
+      self.wykres1.clear()
+      self.wykres2.clear()
+      if self.maxChBox.isChecked():
+        self.wykres1.plot_date(self.dateX,self.maxX,'ro')
+      if self.openChBox.isChecked():
+        self.wykres1.plot_date(self.dateX,self.openX,'ys')
+      if self.closeChBox.isChecked():
+        self.wykres1.plot_date(self.dateX,self.closeX,'.k')
+      if self.minChBox.isChecked():
+        self.wykres1.plot_date(self.dateX,self.minX,'b^')
+      self.wykres2.plot_date(self.dateX,self.volX)
       self.canvas.draw()
     else:
-      self.wykres21.cla()
-      self.wykres22.cla()
-      self.wykres11.plot(self.plotX,self.plotY,'.k')
-      self.wykres22.plot(self.plotY,self.plotX,'{}'.format(pType))
+      self.wykres11.clear()
+      self.wykres22.clear()
+      self.wykres11.plot(self.plotX,self.plotY,'ro')
+      self.wykres22.plot(self.plotY,self.plotX,'b^')
       self.canvas.draw()
   
   def createPlot(self):
