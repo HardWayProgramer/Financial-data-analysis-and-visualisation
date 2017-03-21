@@ -14,9 +14,6 @@ import datetime
 
 
 class Window(QtGui.QTabWidget):
-  plotX = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-  plotY = [1,1,2,1,2,3,4,5,3,4,3,2,3,4,5,6]
-  plotRGB = []
   currency = None
   dateX = []
   openX = []
@@ -26,16 +23,31 @@ class Window(QtGui.QTabWidget):
   volX = []
   dateXt2 = []
   valXt2 = []
-  
+  trendDate = []
 
-  def dspNetError(self):
-    errinfo = QtGui.QMessageBox()
-    errinfo.setIcon(QtGui.QMessageBox.Information)
-    errinfo.setText('Failed to obtain data')
-    errinfo.setDetailedText('One or more of the following might have occured:\n-You have no network connection\n-Source servers are down\n-Your firewall or provider is blocking the connection with finance.yahoo.com\n-The site might be redirected / blocked in:\n   /etc/hosts (linux)\n  ..\Windows\System32\drivers\etc\hosts')
-    errinfo.setGeometry((self.scrRes.width()/2 -150),(self.scrRes.height()/2 -100),300, 200)
-    errinfo.setStandardButtons(QtGui.QMessageBox.Ok)
-    errinfo.exec_()
+  def plotTrendX(self):
+    pass
+    
+
+  def rmCrappyCoding(self,crap):
+    for i in range(0, len(crap)):
+      try:
+        crap[i].encode('ascii')
+      except:
+        crap = crap[i].replace('')
+    return crap
+  
+  def qdate2int(qd):
+    return int(str(qd[0])+str(qd[1])+str(qd[2]))
+
+  def addDate(self):
+    if len(self.trendDate)==0:
+      self.trendDate.append(qdate2int(self.dPicker1.selectedDate()))
+      self.pickButton.setText('Pick 2nd date')
+    elif len(self.trendDate)<2:
+      self.trendDate.append(qdate2int(self.dPicker1.selectedDate()))
+      
+    print self.trendDate
 
   def updateTab1Variables(self,table):
     recData = self.kopacz.fromDatabase(table)
@@ -54,13 +66,28 @@ class Window(QtGui.QTabWidget):
       self.volX.append(line[5])
     self.updatePlot()
 
-  def updateTab2Variables(self,table):
-    self.dateXt2 = []
-    self.valXt2 = []
-    recData = self.kopacz.fromDatabase(table)
-    for line in recData:
-      self.dateXt2.append(mdates.datestr2num(str(line[0])))
-      self.valXt2.append(mdates.datestr2num(line[1]))
+  def updateTab2Variables(self,table,table2):
+    tmp1 = []
+    tmp2 = []
+    if table != None:
+      self.dateXt2 = []
+      self.valXt2 = []
+      recData = self.kopacz.fromDatabase(table)
+      for line in recData:
+        self.dateXt2.append(mdates.datestr2num(str(line[0])))
+        self.valXt2.append(line[1])
+    if table2 != None:
+      self.dateXt22 = []
+      self.valXt22  = []  
+      recData2 = self.kopacz.fromDatabase(table2)
+      for line in recData2:
+        self.dateXt22.append(mdates.datestr2num(str(line[0])))
+        self.valXt22.append(line[1])
+    for i in range(0,len(self.valXt2)):
+      self.valXt2[i] = self.rmCrappyCoding(self.valXt2[i])
+      self.valXt22[i] = self.rmCrappyCoding(self.valXt22[i])
+    print self.valXt2
+    self.updatePlot()
 
   @QtCore.pyqtSlot(str)
   def on_indexCombo_currentIndexChanged(self,index):
@@ -76,13 +103,24 @@ class Window(QtGui.QTabWidget):
       self.layout1.addWidget(self.closeChBox,3,10,1,2)
       self.layout1.addWidget(self.openChBox,4,10,1,2)
       self.layout1.addWidget(self.minChBox,5,10,1,2)
-
+      self.layout1.addWidget(self.dPicker1,6,10,4,1)
+      self.layout1.addWidget(self.pickButton,11,10,1,1)
+      self.pickButton.clicked.connect(self.addDate)
 
   @QtCore.pyqtSlot(str,)
   def on_companyCombo_currentIndexChanged(self,index):
     if self.companyCombo.itemText(0) == 'Select Company':
       self.companyCombo.removeItem(0)
     self.updateTab1Variables(self.companyCombo.currentText())
+
+  @QtCore.pyqtSlot(str)
+  def on_curr1combo_currentIndexChanged(self,index):
+    self.updateTab2Variables(self.curr1combo.currentText(),None)
+
+  @QtCore.pyqtSlot(str)
+  def on_curr2combo_currentIndexChanged(self,index):
+    self.updateTab2Variables(None,self.curr2combo.currentText())
+
 
   def __init__(self,appref):
     super(Window,self).__init__()
@@ -104,10 +142,18 @@ class Window(QtGui.QTabWidget):
     self.indexCombo.addItems(self.stockItems.keys())
     self.indexCombo.currentIndexChanged[str].connect(self.on_indexCombo_currentIndexChanged)
     self.companyCombo = QtGui.QComboBox(self)
+    self.curr1combo = QtGui.QComboBox(self)
+    self.curr1combo.currentIndexChanged[str].connect(self.on_curr1combo_currentIndexChanged)
+    self.curr1combo.addItems(self.kopacz.currList)
+    self.curr2combo = QtGui.QComboBox(self)
+    self.curr2combo.currentIndexChanged[str].connect(self.on_curr2combo_currentIndexChanged)
+    self.curr2combo.addItems(self.kopacz.currList)
     self.openChBox = QtGui.QCheckBox('open price',self)
     self.closeChBox = QtGui.QCheckBox('close price',self)
     self.maxChBox = QtGui.QCheckBox('max price',self)
     self.minChBox = QtGui.QCheckBox('min price',self)
+    self.dPicker1 = QtGui.QCalendarWidget()
+    self.pickButton = QtGui.QPushButton('Pick date 1')
     self.createPlot()
     self.openChBox.stateChanged.connect(self.updatePlot)
     self.closeChBox.stateChanged.connect(self.updatePlot)
@@ -123,12 +169,13 @@ class Window(QtGui.QTabWidget):
     
     self.layout2.addWidget(self.canvas2,0,0,10,10)
     self.layout2.addWidget(self.toolbar2,11,0,1,10)
+    self.layout2.addWidget(self.curr1combo,0,10,1,2)
 
 
   def updatePlot(self):
     if self.tabs.currentIndex() == 0:
-      self.wykres1.clear()
-      self.wykres2.clear()
+      self.wykres1.cla()
+      self.wykres2.cla()
       if self.maxChBox.isChecked():
         self.wykres1.plot_date(self.dateX,self.maxX,'ro')
       if self.openChBox.isChecked():
@@ -140,11 +187,11 @@ class Window(QtGui.QTabWidget):
       self.wykres2.plot_date(self.dateX,self.volX)
       self.canvas.draw()
     else:
-      self.wykres11.clear()
-      self.wykres22.clear()
-      self.wykres11.plot(self.plotX,self.plotY,'ro')
-      self.wykres22.plot(self.plotY,self.plotX,'b^')
-      self.canvas.draw()
+      self.wykres11.cla()
+      self.wykres22.cla()
+      self.wykres11.plot_date(self.dateX,self.valXt2,'ro')
+      self.wykres22.plot_date(self.dateXt22,self.valXt22,'b^')
+      self.canvas2.draw()
   
   def createPlot(self):
     self.figure = plt.figure()
@@ -159,10 +206,6 @@ class Window(QtGui.QTabWidget):
     self.wykres22 = self.figure2.add_subplot(2,1,2)
     self.wykres1.hold(True)
     self.wykres11.hold(True)
-
-
-#  def splitToPlot([]):
-
 
 def main():
   app = QtGui.QApplication(sys.argv)
